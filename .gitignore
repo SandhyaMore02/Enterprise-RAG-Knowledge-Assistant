@@ -26,8 +26,11 @@ ENV/
 *.env.local
 
 # ChromaDB / local storage
-storage/chroma/
-storage/*.db
+storage/
+**/storage/
+*.sqlite3
+*.bin
+
 
 # Uploaded documents (never commit real company docs)
 data/uploads/
