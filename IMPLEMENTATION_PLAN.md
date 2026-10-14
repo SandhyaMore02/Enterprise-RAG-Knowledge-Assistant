@@ -652,18 +652,19 @@ Use synthetic company documents for repeatable tests. Never make the test suite 
 
 The first complete version is ready when all of the following are true:
 
-- [ ] A user can upload PDF, DOCX, and TXT files.
-- [ ] Text extraction and chunking preserve useful source metadata.
-- [ ] Embeddings are stored persistently in ChromaDB.
-- [ ] A question retrieves relevant document chunks.
-- [ ] The LLM answers using the retrieved context.
-- [ ] Answers show supporting source references where available.
-- [ ] Unsupported questions receive a cautious response.
-- [ ] FastAPI exposes working endpoints.
-- [ ] Streamlit provides a usable upload-and-question interface.
-- [ ] Core behavior has automated tests.
-- [ ] API keys and private documents are excluded from Git.
-- [ ] README setup instructions work on a fresh clone.
+- [x] A user can upload PDF, DOCX, and TXT files.
+- [x] Text extraction and chunking preserve useful source metadata.
+- [x] Embeddings are stored persistently in ChromaDB.
+- [x] A question retrieves relevant document chunks.
+- [x] The LLM answers using the retrieved context.
+- [x] Answers show supporting source references where available.
+- [x] Unsupported questions receive a cautious response.
+- [x] FastAPI exposes working endpoints.
+- [x] Streamlit provides a usable upload-and-question interface.
+- [x] Core behavior has automated tests.
+- [x] API keys and private documents are excluded from Git.
+- [x] README setup instructions work on a fresh clone.
+
 
 ---
 

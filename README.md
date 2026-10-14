@@ -107,24 +107,26 @@ All settings are managed through environment variables. See [`.env.example`](.en
 | POST | `/documents/upload` | Upload and process a document |
 | GET | `/documents` | List indexed documents |
 | DELETE | `/documents/{document_id}` | Remove a document |
-| POST | `/chat` | Ask a question |
+| POST | `/chat` | Ask a question with conversation memory |
+| POST | `/documents/compare` | Compare two documents / policy versions |
 
 ## Development Status
 
-- [x] Phase 0: Environment setup
-- [x] Phase 1: Document processing (PDF, DOCX, TXT)
-- [ ] Phase 2: Text chunking
-- [ ] Phase 3: Embeddings + ChromaDB
-- [ ] Phase 4: Retrieval
-- [ ] Phase 5: LLM answer generation
-- [ ] Phase 6: FastAPI endpoints
-- [ ] Phase 7: Streamlit UI
-- [ ] Phase 8: Conversation context
-- [ ] Phase 9: Document comparison
-- [ ] Phase 10: Evaluation
-- [ ] Phase 11: Security controls
-- [ ] Phase 12: Documentation
-- [ ] Phase 13: Deployment
+- [x] Phase 0: Environment setup & Git repository
+- [x] Phase 1: Document processing (PDF with page numbers, DOCX, TXT)
+- [x] Phase 2: Text chunking with provenance retention
+- [x] Phase 3: Vector Embeddings & persistent ChromaDB storage
+- [x] Phase 4: Semantic retrieval & confidence thresholding
+- [x] Phase 5: Grounded answer generation with Anthropic Claude & citations
+- [x] Phase 6: FastAPI REST backend with input validation
+- [x] Phase 7: Streamlit UI with multi-tab workspace
+- [x] Phase 8: Multi-turn conversation context & query reformulator
+- [x] Phase 9: Document comparison workflow
+- [x] Phase 10: Retrieval quality evaluation suite & Recall@k metrics
+- [x] Phase 11: Security & reliability controls (file limits, prompt injection mitigation)
+- [x] Phase 12: Documentation & 44 automated tests
+- [ ] Phase 13: Optional hosted cloud deployment
+
 
 ## License
 
