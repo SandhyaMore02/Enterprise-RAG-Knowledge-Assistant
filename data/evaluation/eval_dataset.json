@@ -1,0 +1,42 @@
+[
+  {
+    "id": "eval-1",
+    "question": "What is the annual leave policy for full-time employees?",
+    "expected_document": "sample_hr_policy.txt",
+    "expected_keywords": ["20 days", "annual leave"],
+    "is_supported": true,
+    "description": "Standard retrieval of full-time leave policy."
+  },
+  {
+    "id": "eval-2",
+    "question": "How many days of annual leave do interns receive?",
+    "expected_document": "sample_hr_policy.txt",
+    "expected_keywords": ["5 days", "intern"],
+    "is_supported": true,
+    "description": "Specific clause retrieval for intern entitlement."
+  },
+  {
+    "id": "eval-3",
+    "question": "What is the minimum password length required by the IT policy?",
+    "expected_document": "sample_it_guidelines.txt",
+    "expected_keywords": ["12 characters", "password"],
+    "is_supported": true,
+    "description": "IT security policy password length verification."
+  },
+  {
+    "id": "eval-4",
+    "question": "How often do passwords need to be rotated?",
+    "expected_document": "sample_it_guidelines.txt",
+    "expected_keywords": ["90 days", "changed"],
+    "is_supported": true,
+    "description": "IT security password rotation cycle."
+  },
+  {
+    "id": "eval-5",
+    "question": "What is the parental leave entitlement for new fathers?",
+    "expected_document": null,
+    "expected_keywords": [],
+    "is_supported": false,
+    "description": "Out-of-domain / unsupported question to evaluate abstention behavior."
+  }
+]

@@ -1,0 +1,48 @@
+# =============================================================================
+# Enterprise RAG Knowledge Assistant — Dependencies
+# =============================================================================
+# Python 3.12+
+# Install: pip install -r requirements.txt
+# =============================================================================
+
+# --- API / Backend ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# --- LLM Providers ---
+anthropic==0.42.0
+openai==1.59.7
+
+# --- RAG Orchestration ---
+langchain==0.3.14
+langchain-anthropic==0.3.4
+langchain-openai==0.3.1
+langchain-community==0.3.14
+langchain-text-splitters==0.3.4
+
+# --- Vector Store ---
+chroma-hnswlib==0.7.5
+chromadb==0.5.4
+
+
+# --- Document Parsing ---
+pypdf==5.1.0
+docx2txt==0.8
+
+# --- Configuration ---
+python-dotenv==1.0.1
+pydantic==2.10.5
+pydantic-settings==2.7.1
+
+# --- Frontend ---
+streamlit==1.41.1
+requests==2.32.3
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+
+# --- Utilities ---
+uuid6==2024.7.10

@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment and secrets
+.env
+*.env.local
+
+# ChromaDB / local storage
+storage/chroma/
+storage/*.db
+
+# Uploaded documents (never commit real company docs)
+data/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Logs
+*.log
+
+# Byte-compiled
+*.pyc
+
+# Distribution
+*.whl
+*.tar.gz

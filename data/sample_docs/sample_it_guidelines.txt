@@ -1,0 +1,81 @@
+ACME CORPORATION — IT SECURITY AND ACCEPTABLE USE GUIDELINES
+Version 2.1 | Effective Date: March 15, 2026
+=============================================
+
+SECTION 1: PASSWORD POLICY
+
+1.1 Password Requirements
+All passwords must meet the following minimum requirements:
+- Minimum length: 12 characters
+- Must contain at least one uppercase letter, one lowercase letter,
+  one digit, and one special character
+- Must not contain the user's name, username, or common dictionary words
+- Must not reuse any of the last 10 passwords
+
+1.2 Password Rotation
+Passwords must be changed every 90 days. The system will prompt users
+14 days before expiration. Accounts with expired passwords will be locked
+after a 3-day grace period.
+
+1.3 Multi-Factor Authentication
+MFA is required for:
+- All VPN connections
+- Access to production systems
+- Administrative consoles
+- Financial applications
+
+SECTION 2: DATA CLASSIFICATION
+
+2.1 Classification Levels
+All company data must be classified according to the following levels:
+
+- PUBLIC: Information intended for public release. No restrictions.
+- INTERNAL: General business information. Available to all employees.
+- CONFIDENTIAL: Sensitive business data. Access restricted to authorized
+  personnel on a need-to-know basis.
+- RESTRICTED: Highly sensitive data including PII, financial records,
+  and trade secrets. Requires encryption at rest and in transit.
+
+2.2 Handling Requirements
+- RESTRICTED data must be encrypted using AES-256 or equivalent.
+- CONFIDENTIAL data must not be stored on personal devices.
+- All data transfers outside the corporate network require manager approval.
+
+SECTION 3: INCIDENT RESPONSE
+
+3.1 Reporting
+All security incidents must be reported to the IT Security team within
+1 hour of discovery via the Security Incident Portal or by calling the
+24/7 Security Hotline at extension 5555.
+
+3.2 Severity Levels
+- CRITICAL: Active data breach or system compromise. Response: Immediate.
+- HIGH: Potential breach or vulnerability being actively exploited. Response: 4 hours.
+- MEDIUM: Suspicious activity that may indicate a threat. Response: 24 hours.
+- LOW: Minor policy violation with no evidence of data exposure. Response: 72 hours.
+
+3.3 Post-Incident Review
+A post-incident review must be conducted within 5 business days of incident
+resolution. Findings must be documented and shared with the CISO.
+
+SECTION 4: ACCEPTABLE USE
+
+4.1 Company Equipment
+Company-provided equipment is for business use. Limited personal use is
+permitted provided it does not interfere with work duties or violate
+company policies.
+
+4.2 Prohibited Activities
+The following activities are strictly prohibited on company networks:
+- Unauthorized access attempts to any system
+- Installation of unlicensed or unapproved software
+- Sharing credentials with any other person
+- Bypassing security controls or content filters
+- Downloading or distributing copyrighted material
+
+4.3 Monitoring
+The company reserves the right to monitor all network traffic, email
+communications, and system usage on company-owned equipment. Employees
+should have no expectation of privacy when using company resources.
+
+END OF DOCUMENT
