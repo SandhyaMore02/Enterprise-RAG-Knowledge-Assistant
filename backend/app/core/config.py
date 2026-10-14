@@ -13,13 +13,22 @@ from pydantic import Field
 class Settings(BaseSettings):
     """Application-wide settings loaded from environment variables."""
 
-    # --- LLM Provider (Anthropic Claude) ---
+    # --- LLM Provider Selection ---
+    llm_provider: str = Field(default="gemini", description="LLM provider: gemini | anthropic | openai | mock")
+
+    # --- Google Gemini (Free tier on Google AI Studio) ---
+    google_api_key: str = Field(default="", description="Google Gemini API key")
+    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model name")
+    gemini_embedding_model: str = Field(default="models/text-embedding-004", description="Gemini embedding model")
+
+    # --- Anthropic Claude ---
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
     llm_model: str = Field(default="claude-sonnet-4-20250514", description="Anthropic model name")
 
-    # --- Embedding Provider (OpenAI) ---
-    openai_api_key: str = Field(default="", description="OpenAI API key for embeddings")
+    # --- OpenAI ---
+    openai_api_key: str = Field(default="", description="OpenAI API key")
     embedding_model: str = Field(default="text-embedding-3-small", description="OpenAI embedding model")
+
 
     # --- ChromaDB ---
     chroma_persist_directory: str = Field(

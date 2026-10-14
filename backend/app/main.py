@@ -5,6 +5,11 @@ Entry point for the backend API server.
 Run with: uvicorn backend.app.main:app --reload
 """
 
+import os
+
+# Disable Chroma telemetry before import
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -19,6 +24,7 @@ logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
 )
+logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 

@@ -47,7 +47,14 @@ class ComparisonService:
 
     def __init__(self, vector_store: VectorStoreService | None = None, llm=None) -> None:
         self.vector_store = vector_store or VectorStoreService()
-        self.llm = llm
+        self._llm = llm
+
+    @property
+    def llm(self):
+        if callable(self._llm):
+            return self._llm()
+        return self._llm
+
 
     def compare_documents(
         self,

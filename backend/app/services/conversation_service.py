@@ -37,7 +37,14 @@ class ConversationService:
 
     def __init__(self, llm=None) -> None:
         self.sessions: dict[str, list[dict[str, str]]] = {}
-        self.llm = llm
+        self._llm = llm
+
+    @property
+    def llm(self):
+        if callable(self._llm):
+            return self._llm()
+        return self._llm
+
 
     def create_session(self) -> str:
         """Create a new conversation session ID."""

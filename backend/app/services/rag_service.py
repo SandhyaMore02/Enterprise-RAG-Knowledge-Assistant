@@ -46,27 +46,45 @@ class RAGService:
         self._llm = None
 
     def _get_llm(self):
-        """Lazy load and configure the Anthropic Chat model."""
+        """Lazy load and configure the LLM (Google Gemini or Anthropic Claude)."""
         if self._llm is not None:
             return self._llm
 
-        if not self.api_key or "replace-" in self.api_key:
-            logger.warning("No Anthropic API key provided. RAG service will run in mock/grounded mode.")
-            return None
+        # 1. Google Gemini (Free tier)
+        if settings.google_api_key and "replace-" not in settings.google_api_key:
+            try:
+                from langchain_google_genai import ChatGoogleGenerativeAI
 
-        try:
-            from langchain_anthropic import ChatAnthropic
+                logger.info("Initializing ChatGoogleGenerativeAI with model '%s'", settings.gemini_model)
+                self._llm = ChatGoogleGenerativeAI(
+                    model=settings.gemini_model,
+                    google_api_key=settings.google_api_key,
+                    temperature=0.0,
+                )
+                return self._llm
+            except Exception as e:
+                logger.error("Failed to initialize ChatGoogleGenerativeAI: %s", e)
 
-            self._llm = ChatAnthropic(
-                api_key=self.api_key,
-                model_name=self.model_name,
-                temperature=0.0,
-                max_tokens_to_sample=1024,
-            )
-            return self._llm
-        except Exception as e:
-            logger.error("Failed to initialize ChatAnthropic: %s", e)
-            return None
+        # 2. Anthropic Claude
+        if self.api_key and "replace-" not in self.api_key:
+            try:
+                from langchain_anthropic import ChatAnthropic
+
+                logger.info("Initializing ChatAnthropic with model '%s'", self.model_name)
+                self._llm = ChatAnthropic(
+                    api_key=self.api_key,
+                    model_name=self.model_name,
+                    temperature=0.0,
+                    max_tokens_to_sample=1024,
+                )
+                return self._llm
+            except Exception as e:
+                logger.error("Failed to initialize ChatAnthropic: %s", e)
+
+        # 3. Fallback
+        logger.warning("No LLM API key provided. RAG service will run in offline grounded mode.")
+        return None
+
 
     def answer_question(
         self,

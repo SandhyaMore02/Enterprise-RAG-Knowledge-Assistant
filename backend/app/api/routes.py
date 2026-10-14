@@ -42,8 +42,9 @@ doc_processor = DocumentProcessor()
 chunker = ChunkingService()
 vector_store = VectorStoreService()
 rag_service = RAGService(retrieval_service=None)
-conversation_service = ConversationService()
-comparison_service = ComparisonService(vector_store=vector_store)
+conversation_service = ConversationService(llm=rag_service._get_llm)
+comparison_service = ComparisonService(vector_store=vector_store, llm=rag_service._get_llm)
+
 
 
 

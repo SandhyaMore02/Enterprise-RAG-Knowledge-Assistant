@@ -16,10 +16,12 @@ openai==1.59.7
 
 # --- RAG Orchestration ---
 langchain==0.3.14
+langchain-google-genai==2.1.5
 langchain-anthropic==0.3.4
 langchain-openai==0.3.1
 langchain-community==0.3.14
 langchain-text-splitters==0.3.4
+
 
 # --- Vector Store ---
 chroma-hnswlib==0.7.5

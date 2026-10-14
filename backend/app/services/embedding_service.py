@@ -85,37 +85,65 @@ class EmbeddingService:
         if self._embeddings is not None:
             return self._embeddings
 
-        # If explicitly requested or no valid API key is present
-        if self.use_mock or not self.api_key or "replace-" in self.api_key:
-            logger.info("Using deterministic MockEmbeddings (offline mode, no API key required)")
-            self._embeddings = MockEmbeddings(dimension=DEFAULT_EMBEDDING_DIM)
-            return self._embeddings
+        # Check for Google Gemini API key first
+        if settings.google_api_key and "replace-" not in settings.google_api_key:
+            try:
+                from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-        try:
-            from langchain_openai import OpenAIEmbeddings
+                logger.info("Initializing GoogleGenerativeAIEmbeddings with model '%s'", settings.gemini_embedding_model)
+                self._embeddings = GoogleGenerativeAIEmbeddings(
+                    model=settings.gemini_embedding_model,
+                    google_api_key=settings.google_api_key,
+                )
+                return self._embeddings
+            except Exception as e:
+                logger.warning("Failed to initialize GoogleGenerativeAIEmbeddings: %s", e)
 
-            logger.info("Initializing OpenAIEmbeddings with model '%s'", self.model_name)
-            self._embeddings = OpenAIEmbeddings(
-                api_key=self.api_key,
-                model=self.model_name,
-            )
-            return self._embeddings
-        except Exception as e:
-            logger.warning(
-                "Failed to initialize OpenAIEmbeddings: %s. Falling back to MockEmbeddings.",
-                e,
-            )
-            self._embeddings = MockEmbeddings(dimension=DEFAULT_EMBEDDING_DIM)
-            return self._embeddings
+        # Check for OpenAI API key
+        if self.api_key and "replace-" not in self.api_key and not self.use_mock:
+            try:
+                from langchain_openai import OpenAIEmbeddings
+
+                logger.info("Initializing OpenAIEmbeddings with model '%s'", self.model_name)
+                self._embeddings = OpenAIEmbeddings(
+                    api_key=self.api_key,
+                    model=self.model_name,
+                )
+                return self._embeddings
+            except Exception as e:
+                logger.warning("Failed to initialize OpenAIEmbeddings: %s", e)
+
+        # Fallback to offline mock embeddings
+        logger.info("Using deterministic MockEmbeddings (offline mode, no API key required)")
+        self._embeddings = MockEmbeddings(dimension=DEFAULT_EMBEDDING_DIM)
+        return self._embeddings
+
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for a list of document chunk texts."""
+        """Generate embeddings for a list of document chunk texts with automatic fallback."""
         if not texts:
             return []
-        embeddings = self.get_embeddings()
-        return embeddings.embed_documents(texts)
+        try:
+            embeddings = self.get_embeddings()
+            return embeddings.embed_documents(texts)
+        except Exception as e:
+            logger.warning(
+                "Embedding API call failed (%s). Falling back to local deterministic embeddings.",
+                e,
+            )
+            fallback = MockEmbeddings(dimension=DEFAULT_EMBEDDING_DIM)
+            return fallback.embed_documents(texts)
 
     def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for a single user query."""
-        embeddings = self.get_embeddings()
-        return embeddings.embed_query(text)
+        """Generate embedding for a single user query with automatic fallback."""
+        try:
+            embeddings = self.get_embeddings()
+            return embeddings.embed_query(text)
+        except Exception as e:
+            logger.warning(
+                "Query embedding API call failed (%s). Falling back to local deterministic embeddings.",
+                e,
+            )
+            fallback = MockEmbeddings(dimension=DEFAULT_EMBEDDING_DIM)
+            return fallback.embed_query(text)
+
