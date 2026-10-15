@@ -18,8 +18,8 @@ class Settings(BaseSettings):
 
     # --- Google Gemini (Free tier on Google AI Studio) ---
     google_api_key: str = Field(default="", description="Google Gemini API key")
-    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model name")
-    gemini_embedding_model: str = Field(default="models/text-embedding-004", description="Gemini embedding model")
+    gemini_model: str = Field(default="gemini-2.5-flash", description="Gemini model name")
+    gemini_embedding_model: str = Field(default="models/gemini-embedding-001", description="Gemini embedding model")
 
     # --- Anthropic Claude ---
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # --- Paths ---
     project_root: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent,
+        default_factory=lambda: Path(__file__).resolve().parent.parent.parent.parent,
         description="Root directory of the project",
     )
 

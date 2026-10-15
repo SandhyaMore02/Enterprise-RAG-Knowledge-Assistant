@@ -91,12 +91,35 @@ class VectorStoreService:
         # Generate embeddings
         embeddings = self.embedding_service.embed_documents(texts)
 
-        self.collection.add(
-            ids=ids,
-            documents=texts,
-            metadatas=metadatas,
-            embeddings=embeddings,
-        )
+        try:
+            self.collection.add(
+                ids=ids,
+                documents=texts,
+                metadatas=metadatas,
+                embeddings=embeddings,
+            )
+        except Exception as e:
+            if "dimension" in str(e).lower():
+                logger.warning(
+                    "Embedding dimension mismatch detected (%s). Recreating Chroma collection...",
+                    e,
+                )
+                try:
+                    self.client.delete_collection(COLLECTION_NAME)
+                except Exception:
+                    pass
+                self.collection = self.client.get_or_create_collection(
+                    name=COLLECTION_NAME,
+                    metadata={"hnsw:space": "cosine"},
+                )
+                self.collection.add(
+                    ids=ids,
+                    documents=texts,
+                    metadatas=metadatas,
+                    embeddings=embeddings,
+                )
+            else:
+                raise
 
         logger.info("Indexed %d chunks for document '%s'", len(chunks), document_id)
         return len(chunks)
