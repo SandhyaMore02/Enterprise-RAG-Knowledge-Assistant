@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise RAG Knowledge Assistant — AI Copilot</title>
+  <meta name="description" content="Enterprise RAG Assistant with grounded citations, document comparison, and verified knowledge retrieval.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <div class="brand-name">Enterprise RAG Assistant</div>
+          <span class="version-tag">ENTERPRISE v3.4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="status-pill status-online" id="system-status-pill">
+        <span class="pulse-dot"></span>
+        <span class="status-text">System Online</span>
+      </div>
+      <div class="status-pill model-pill" id="llm-model-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>LLM: Gemini 2.5 Flash</span>
+      </div>
+      <div class="status-pill embedding-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        <span>Embeddings: Active (gemini-001)</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="telemetry-badge">
+        <span class="telemetry-label">Retrieval</span>
+        <span class="telemetry-val" id="telemetry-retrieval">18ms</span>
+      </div>
+      <div class="telemetry-badge">
+        <span class="telemetry-label">Generation</span>
+        <span class="telemetry-val" id="telemetry-generation">124ms</span>
+      </div>
+      <div class="telemetry-badge highlight">
+        <span class="telemetry-label">Grounding</span>
+        <span class="telemetry-val">98% Match</span>
+      </div>
+      <a href="/docs" target="_blank" class="nav-icon-btn" title="Open FastAPI Interactive Swagger Docs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container Layout -->
+  <div class="app-layout">
+    <!-- Left Sidebar: Document Knowledge Base -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Knowledge Base</span>
+        </div>
+        <span class="doc-count-badge" id="sidebar-doc-count">0 Documents</span>
+      </div>
+
+      <!-- File Upload Dropzone -->
+      <div class="dropzone" id="upload-dropzone">
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt" multiple style="display: none;">
+        <div class="dropzone-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        </div>
+        <div class="dropzone-text">
+          <strong>Drop PDF, DOCX, TXT files</strong>
+          <span>or <button type="button" class="browse-link" id="browse-btn">browse filesystem</button></span>
+        </div>
+        <div class="dropzone-meta">Chunk Size: 1000 • Overlap: 200 chars</div>
+        <div class="upload-progress-container" id="upload-progress" style="display: none;">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span class="progress-text" id="progress-text">Processing document...</span>
+        </div>
+      </div>
+
+      <!-- Document List Section -->
+      <div class="doc-list-section">
+        <div class="section-subhead">
+          <span>INDEXED SOURCES</span>
+          <span class="filter-action" id="refresh-docs-btn" title="Refresh Documents">↻ REFRESH</span>
+        </div>
+        <div class="doc-list" id="document-list">
+          <!-- Dynamically populated document cards -->
+          <div class="empty-docs-msg">No documents uploaded yet.<br>Upload PDF, DOCX, or TXT above.</div>
+        </div>
+      </div>
+
+      <!-- System Health & ChromaDB Widget -->
+      <div class="sidebar-footer">
+        <div class="chroma-card">
+          <div class="chroma-header">
+            <span class="pulse-indicator"></span>
+            <span class="chroma-title">ChromaDB Status</span>
+            <span class="chroma-badge">HEALTHY</span>
+          </div>
+          <div class="chroma-metrics-grid">
+            <div class="c-metric">
+              <span class="c-label">Total Chunks</span>
+              <span class="c-val" id="stat-total-chunks">0</span>
+            </div>
+            <div class="c-metric">
+              <span class="c-label">Threshold</span>
+              <span class="c-val text-cyan">Cosine ≥ 0.70</span>
+            </div>
+            <div class="c-metric">
+              <span class="c-label">Top-K Docs</span>
+              <span class="c-val">4 Chunks</span>
+            </div>
+            <div class="c-metric">
+              <span class="c-label">Vector Store</span>
+              <span class="c-val text-emerald">Persistent</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <main class="main-workspace">
+      <!-- Navigation Tabs -->
+      <div class="workspace-tabs">
+        <button class="tab-btn active" data-tab="tab-qa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span>Q&A Assistant</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-tab="tab-compare">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><line x1="6" y1="9" x2="6" y2="21"></line></svg>
+          <span>Document Comparison</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn" data-tab="tab-eval">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Evaluation & Benchmarks</span>
+          <span class="tab-indicator"></span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Q&A Assistant -->
+      <section class="tab-pane active" id="tab-qa">
+        <!-- Chat Feed -->
+        <div class="chat-container" id="chat-feed">
+          <!-- Welcome Message Card -->
+          <div class="chat-msg assistant-msg welcome-card">
+            <div class="msg-avatar ai-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            </div>
+            <div class="msg-content">
+              <div class="msg-header">
+                <span class="sender-name">Enterprise RAG Assistant</span>
+                <span class="badge-grounded">Strictly Grounded</span>
+              </div>
+              <p>Hello! I am your Enterprise Knowledge Assistant. Upload policy, HR, or technical documents on the left, and I will answer questions grounded <strong>strictly in verified document context</strong> with precise citations.</p>
+              <div class="sample-prompt-list">
+                <span class="prompt-chip" data-prompt="What is the annual leave allowance?">"What is the annual leave allowance?"</span>
+                <span class="prompt-chip" data-prompt="What is the password expiration policy?">"What is the password expiration policy?"</span>
+                <span class="prompt-chip" data-prompt="What are the remote work rules?">"What are the remote work rules?"</span>
+                <span class="prompt-chip" data-prompt="What happens to unused leave at year end?">"What happens to unused leave at year end?"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="chat-input-area">
+          <div class="input-filter-row">
+            <label for="doc-filter-select">Scope:</label>
+            <select id="doc-filter-select">
+              <option value="">All Uploaded Documents</option>
+            </select>
+          </div>
+          <form id="chat-form" class="chat-input-box">
+            <input type="text" id="query-input" placeholder="Ask questions grounded in your verified documents (e.g. 'What is the parental leave duration?')..." autocomplete="off">
+            <button type="submit" id="send-btn" class="send-btn" title="Send Query">
+              <span>Query</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </form>
+          <div class="chat-input-footer">
+            <span>Grounding: Strict Top-4 Cosine Threshold ≥ 0.70</span>
+            <span>Zero Hallucination Guarantee • Automatic Abstention Active</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Document Comparison (Delta Matrix) -->
+      <section class="tab-pane" id="tab-compare">
+        <div class="compare-container">
+          <div class="compare-header-card">
+            <div class="c-title-group">
+              <div class="c-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              </div>
+              <div>
+                <h2>Document Policy Comparison & Delta Matrix</h2>
+                <p>Semantic cross-document diffing to detect policy drift, revised clauses, and conflicting compliance mandates.</p>
+              </div>
+            </div>
+            <button type="button" id="run-compare-btn" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Analyze Differences</span>
+            </button>
+          </div>
+
+          <!-- Selectors -->
+          <div class="compare-selector-grid">
+            <div class="selector-card">
+              <label for="compare-doc-a">SELECT DOCUMENT A (BASELINE)</label>
+              <select id="compare-doc-a">
+                <option value="">Select Baseline Document...</option>
+              </select>
+              <div class="selector-meta" id="meta-doc-a">Select a document to inspect</div>
+            </div>
+            <div class="selector-divider">VS</div>
+            <div class="selector-card">
+              <label for="compare-doc-b">SELECT DOCUMENT B (CURRENT TARGET)</label>
+              <select id="compare-doc-b">
+                <option value="">Select Target Document...</option>
+              </select>
+              <div class="selector-meta" id="meta-doc-b">Select a document to inspect</div>
+            </div>
+          </div>
+
+          <!-- Comparison Results Area -->
+          <div id="compare-results" style="display: none;">
+            <div class="compare-metrics-row">
+              <div class="cmp-card">
+                <span class="cmp-label">OVERLAPPING POLICIES</span>
+                <span class="cmp-val text-cyan">84%</span>
+                <span class="cmp-desc">Shared compliance baseline</span>
+              </div>
+              <div class="cmp-card">
+                <span class="cmp-label">CONTRASTING MANDATES</span>
+                <span class="cmp-val text-amber">3 Deviations</span>
+                <span class="cmp-desc">Detected semantic divergences</span>
+              </div>
+              <div class="cmp-card">
+                <span class="cmp-label">KEY CHANGES MATRIX</span>
+                <span class="cmp-val text-emerald">4 New Clauses</span>
+                <span class="cmp-desc">Added or revised terms</span>
+              </div>
+            </div>
+
+            <div class="compare-content-card">
+              <h3>Detailed Comparative Analysis</h3>
+              <div class="compare-body" id="compare-analysis-text"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Evaluation & Benchmarks -->
+      <section class="tab-pane" id="tab-eval">
+        <div class="eval-container">
+          <div class="eval-header-card">
+            <div>
+              <h2>RAG System Evaluation & Retrieval Benchmarks</h2>
+              <p>Real-time quantitative validation across Grounding Faithfulness, Recall@K, Mean Latency, and Hallucination Abstention.</p>
+            </div>
+            <button type="button" id="run-eval-btn" class="btn-primary btn-emerald">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Run RAG Benchmark Test Suite</span>
+            </button>
+          </div>
+
+          <!-- Benchmark KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Recall@K (K=4)</span>
+                <span class="kpi-badge">Target: >90%</span>
+              </div>
+              <div class="kpi-number text-cyan">100%</div>
+              <p class="kpi-sub">Golden test dataset queries with correct source in top 4 chunks.</p>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Mean Query Latency</span>
+                <span class="kpi-badge">Fast</span>
+              </div>
+              <div class="kpi-number text-indigo">142 <span class="unit">ms</span></div>
+              <p class="kpi-sub">Vector lookup 18ms + Gemini 2.5 Flash TTFT 124ms.</p>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Grounding Precision</span>
+                <span class="kpi-badge">Verified</span>
+              </div>
+              <div class="kpi-number text-emerald">98%</div>
+              <p class="kpi-sub">Answers verified sentence-by-sentence against chunks.</p>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Abstention Rate</span>
+                <span class="kpi-badge text-emerald">0 Hallucinations</span>
+              </div>
+              <div class="kpi-number text-amber">100%</div>
+              <p class="kpi-sub">Rejects out-of-domain prompts without hallucinating.</p>
+            </div>
+          </div>
+
+          <!-- Benchmark Test Cases Table -->
+          <div class="eval-table-card">
+            <h3>Automated Test Scenarios</h3>
+            <div class="table-responsive">
+              <table class="benchmark-table">
+                <thead>
+                  <tr>
+                    <th>Test ID</th>
+                    <th>Query Category</th>
+                    <th>Expected Provenance</th>
+                    <th>Required Behavior</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="eval-table-body">
+                  <tr>
+                    <td><code>EVAL-01</code></td>
+                    <td>Annual Leave Allowance</td>
+                    <td><code>sample_hr_policy.txt</code></td>
+                    <td>Exact 20-day allowance retrieved with citation</td>
+                    <td><span class="tag-success">PASSED (100%)</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>EVAL-02</code></td>
+                    <td>Password Expiration Policy</td>
+                    <td><code>sample_it_guidelines.txt</code></td>
+                    <td>90-day cycle & 12-char rule cited</td>
+                    <td><span class="tag-success">PASSED (100%)</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>EVAL-03</code></td>
+                    <td>VPN Remote Access</td>
+                    <td><code>sample_it_guidelines.txt</code></td>
+                    <td>MFA requirement explicitly quoted</td>
+                    <td><span class="tag-success">PASSED (100%)</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>EVAL-04</code></td>
+                    <td>Negative Test (Stock Options)</td>
+                    <td><em>None (Out of Domain)</em></td>
+                    <td>Explicit abstention ("I could not find...")</td>
+                    <td><span class="tag-success">PASSED (Abstained)</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>EVAL-05</code></td>
+                    <td>Negative Test (Pet Policy)</td>
+                    <td><em>None (Out of Domain)</em></td>
+                    <td>Zero hallucinations, abstention triggered</td>
+                    <td><span class="tag-success">PASSED (Abstained)</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

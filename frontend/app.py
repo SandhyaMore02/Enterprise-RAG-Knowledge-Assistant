@@ -23,37 +23,67 @@ st.set_page_config(
 BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # ---------------------------------------------------------------------------
-# Custom Styling
+# Stitch AI Custom Styling
 # ---------------------------------------------------------------------------
 st.markdown(
     """
     <style>
-    .main-header {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #1E293B;
-        margin-bottom: 0.2rem;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
     }
-    .sub-header {
-        font-size: 1.05rem;
-        color: #64748B;
-        margin-bottom: 1.8rem;
+    
+    /* Top Header Pill */
+    .brand-banner {
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+        border: 1px solid rgba(0, 210, 255, 0.25);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .brand-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+    .brand-sub {
+        font-size: 0.85rem;
+        color: #94A3B8;
+        margin: 0;
+    }
+    .badge-stitch {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        padding: 4px 10px;
+        background: rgba(0, 210, 255, 0.15);
+        color: #00D2FF;
+        border: 1px solid rgba(0, 210, 255, 0.35);
+        border-radius: 9999px;
     }
     .source-badge {
         display: inline-block;
-        background-color: #F1F5F9;
-        border: 1px solid #CBD5E1;
+        background-color: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(0, 210, 255, 0.3);
         border-radius: 6px;
         padding: 4px 10px;
         margin: 4px;
-        font-size: 0.85rem;
-        color: #334155;
+        font-size: 0.8rem;
+        font-family: 'JetBrains Mono', monospace;
+        color: #38BDF8;
     }
     .metric-card {
-        background-color: #F8FAFC;
-        border-radius: 8px;
-        padding: 12px;
-        border: 1px solid #E2E8F0;
+        background-color: rgba(15, 23, 42, 0.6);
+        border-radius: 10px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         text-align: center;
     }
     </style>

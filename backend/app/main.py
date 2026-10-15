@@ -68,3 +68,18 @@ async def health_check():
 from backend.app.api.routes import router as api_router
 app.include_router(api_router, tags=["RAG Assistant"])
 
+# ---------------------------------------------------------------------------
+# Stitch AI Modern Frontend Mount
+# ---------------------------------------------------------------------------
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+frontend_static_dir = settings.project_root / "frontend" / "static"
+if frontend_static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_static_dir)), name="static")
+
+    @app.get("/", response_class=FileResponse, tags=["Frontend"])
+    async def serve_frontend():
+        """Serve the Stitch AI-designed modern web UI."""
+        return FileResponse(frontend_static_dir / "index.html")
+
