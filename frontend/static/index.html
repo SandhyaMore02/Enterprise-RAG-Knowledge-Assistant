@@ -3,451 +3,377 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Synapse RAG Enterprise — Knowledge Synthesizer & Citation Inspector</title>
-  <meta name="description" content="Mission-critical Enterprise RAG Knowledge Assistant with grounded citations, vector telemetry, and semantic provenance tracking.">
+  <title>Enterprise RAG Assistant — Knowledge Intelligence</title>
+  <meta name="description" content="Professional Enterprise RAG Knowledge Assistant with grounded verified citations.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="bg-obsidian text-slate antialiased overflow-hidden select-none">
+<body class="clean-app">
 
   <!-- ========================================================================= -->
-  <!-- LEFT NAVIGATION RAIL (System Core & Active Corpus)                        -->
+  <!-- SIDEBAR NAVIGATION                                                        -->
   <!-- ========================================================================= -->
-  <aside class="left-rail">
-    <div class="rail-top">
-      <!-- Brand Header -->
-      <div class="brand-lockup">
-        <div class="brand-emblem">
-          <span class="material-symbols-outlined icon-glow">hub</span>
+  <aside class="app-sidebar">
+    <div class="sidebar-top">
+      <!-- Clean Brand Logo -->
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <span class="material-symbols-outlined">auto_awesome</span>
         </div>
-        <div class="brand-meta">
-          <span class="brand-title">SYNAPSE RAG</span>
-          <span class="brand-tag">v4.2 Enterprise</span>
+        <div class="brand-info">
+          <span class="brand-title">Enterprise Assistant</span>
+          <span class="brand-sub">RAG Knowledge Base</span>
         </div>
       </div>
 
-      <!-- Quick Action: New Pipeline / Query -->
-      <button class="rail-cta-btn" id="new-query-btn" title="Clear conversation and start fresh query (Ctrl+N)">
-        <span class="material-symbols-outlined text-sm">add</span>
-        <span>New Query</span>
-        <kbd class="kbd-hint">Ctrl+N</kbd>
+      <!-- New Chat Button -->
+      <button class="new-chat-btn" id="new-query-btn" title="Start new conversation (Ctrl+N)">
+        <span class="material-symbols-outlined">add</span>
+        <span>New Chat</span>
+        <kbd class="shortcut-tag">Ctrl+N</kbd>
       </button>
 
-      <!-- System Core Nav Items -->
-      <nav class="system-nav">
-        <div class="nav-section-label">System Core</div>
-        <button class="nav-item active" data-view="view-chat">
-          <span class="material-symbols-outlined">terminal</span>
-          <span>Query Console</span>
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <div class="nav-label">WORKSPACE</div>
+        <button class="nav-link active" data-view="view-chat">
+          <span class="material-symbols-outlined">chat_bubble</span>
+          <span>Assistant</span>
         </button>
-        <button class="nav-item" data-view="view-documents">
-          <span class="material-symbols-outlined">database</span>
-          <span>Knowledge Base</span>
-          <span class="nav-badge" id="rail-doc-count">0</span>
+        <button class="nav-link" data-view="view-documents">
+          <span class="material-symbols-outlined">folder</span>
+          <span>Documents</span>
+          <span class="nav-count" id="rail-doc-count">0</span>
         </button>
-        <button class="nav-item" data-view="view-compare">
-          <span class="material-symbols-outlined">difference</span>
-          <span>Policy Matrix</span>
+        <button class="nav-link" data-view="view-compare">
+          <span class="material-symbols-outlined">compare_arrows</span>
+          <span>Compare Docs</span>
         </button>
-        <button class="nav-item" data-view="view-eval">
-          <span class="material-symbols-outlined">verified_user</span>
-          <span>Audit & Benchmarks</span>
+        <button class="nav-link" data-view="view-eval">
+          <span class="material-symbols-outlined">analytics</span>
+          <span>Evaluation</span>
         </button>
       </nav>
 
-      <!-- Active Corpus Section -->
-      <div class="corpus-section">
-        <div class="corpus-head">
-          <span class="corpus-label">ACTIVE CORPUS</span>
-          <span class="corpus-sync text-emerald" id="corpus-sync-tag">Synced</span>
+      <!-- Uploaded Documents Quick Access -->
+      <div class="sidebar-docs-section">
+        <div class="docs-section-head">
+          <span>INDEXED DOCUMENTS</span>
+          <button class="doc-refresh-icon" id="quick-refresh-btn" title="Refresh document list">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
         </div>
-        <div class="corpus-list custom-scroll" id="rail-corpus-list">
-          <div class="corpus-empty">No indexed documents</div>
+        <div class="sidebar-docs-list custom-scroll" id="rail-corpus-list">
+          <div class="docs-empty-state">No documents uploaded yet</div>
         </div>
       </div>
     </div>
 
-    <!-- Rail Footer: Telemetry & ChromaDB Status -->
-    <div class="rail-bottom">
-      <div class="telemetry-box">
-        <div class="telemetry-row">
-          <span class="telemetry-title">ChromaDB v0.5.4</span>
-          <span class="telemetry-status text-emerald">
-            <span class="pulse-emerald"></span> Online
-          </span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-bar-fill" id="chroma-health-fill" style="width: 100%;"></div>
-        </div>
-        <div class="telemetry-stats">
-          <span id="rail-total-chunks">0 Chunks Indexed</span>
-          <span>Cosine ≥ 0.70</span>
-        </div>
-      </div>
-
-      <div class="rail-footer-actions">
-        <button class="footer-btn" id="open-settings-btn" title="Open Settings">
-          <span class="material-symbols-outlined text-base">settings</span>
-          <span>Settings</span>
-        </button>
-        <a href="/docs" target="_blank" class="footer-btn" title="Open FastAPI Interactive Documentation">
-          <span class="material-symbols-outlined text-base">api</span>
-          <span>API Docs</span>
-        </a>
-      </div>
     </div>
   </aside>
 
   <!-- ========================================================================= -->
-  <!-- TOP CONTROL BAR (Cluster Stats, Search, Telemetry)                        -->
+  <!-- TOP APPLICATION BAR                                                       -->
   <!-- ========================================================================= -->
-  <header class="top-bar">
-    <div class="top-left">
-      <div class="cluster-context">
-        <span class="cluster-title">Enterprise Knowledge Assistant</span>
-        <span class="pill pill-cyan" id="cluster-model-pill">Gemini 2.5 Flash</span>
-        <span class="pill pill-slate" id="cluster-emb-pill">gemini-embedding-001</span>
-      </div>
-
-      <!-- Quick Command Input (Cmd+K trigger) -->
-      <div class="command-trigger" id="cmd-k-trigger" title="Press Ctrl+K or Cmd+K to search">
-        <span class="material-symbols-outlined text-slate">search</span>
-        <span class="command-placeholder">Search indexed corpus or actions...</span>
-        <kbd class="kbd-badge">⌘K</kbd>
-      </div>
+  <header class="app-topbar">
+    <div class="topbar-left">
+      <h2 class="view-current-title" id="current-view-title">Assistant</h2>
     </div>
 
-    <div class="top-right">
-      <!-- Breadcrumb Badges -->
-      <div class="cluster-ribbon">
-        <span class="ribbon-item active">Cluster 01</span>
-        <span class="ribbon-item">Dense Cosine</span>
-        <span class="ribbon-item">Top-K: 4</span>
-      </div>
-
-      <!-- Telemetry Ribbon -->
-      <div class="telemetry-ribbon">
-        <span>Retrieval: <strong class="text-emerald" id="top-retrieval-lat">18ms</strong></span>
-        <span class="sep">|</span>
-        <span>Generation: <strong class="text-cyan" id="top-gen-lat">124ms</strong></span>
-        <span class="sep">|</span>
-        <span>Grounding: <strong class="text-emerald">98% Match</strong></span>
-      </div>
-
-      <!-- Actions -->
-      <div class="top-action-group">
-        <button class="icon-btn" id="quick-refresh-btn" title="Refresh Corpus">
-          <span class="material-symbols-outlined">refresh</span>
-        </button>
-        <button class="icon-btn" id="theme-tune-btn" title="Tune Parameters">
-          <span class="material-symbols-outlined">tune</span>
-        </button>
-        <div class="user-avatar-badge" title="Enterprise Systems Operator">SA</div>
-      </div>
+    <div class="topbar-right">
+      <!-- Search Trigger / Command Palette Button -->
+      <button class="search-command-btn" id="cmd-k-trigger" title="Press Ctrl+K or Cmd+K to search">
+        <span class="material-symbols-outlined">search</span>
+        <span>Quick Search...</span>
+        <kbd class="kbd-pill">⌘K</kbd>
+      </button>
     </div>
   </header>
 
   <!-- ========================================================================= -->
-  <!-- MAIN WORKSPACE CANVAS                                                     -->
+  <!-- MAIN APPLICATION CANVAS                                                   -->
   <!-- ========================================================================= -->
-  <main class="main-canvas">
+  <main class="app-main">
 
     <!-- ----------------------------------------------------------------------- -->
-    <!-- VIEW 1: Query Console / Chat Workspace                                  -->
+    <!-- VIEW 1: Chat Workspace                                                  -->
     <!-- ----------------------------------------------------------------------- -->
-    <section class="workspace-view active" id="view-chat">
+    <section class="app-view active" id="view-chat">
       <div class="chat-viewport custom-scroll" id="chat-viewport">
-        <div class="chat-content-wrap">
+        <div class="chat-inner-wrap">
 
-          <!-- Session Metadata Header -->
-          <div class="session-meta-bar">
-            <div class="session-left">
-              <span class="badge-session">
-                <span class="pulse-dot-sm"></span> SESSION #RAG-PROD
-              </span>
-              <span class="meta-label">Collection: <code id="meta-collection-name">enterprise_rag_knowledge</code></span>
-              <span class="meta-sep">·</span>
-              <span class="meta-label">Metric: <code>Cosine Distance</code></span>
-            </div>
-            <div class="session-right">
-              <span>Grounding: <strong class="text-cyan">Strict Verified Mode</strong></span>
-              <span class="meta-sep">·</span>
-              <span>Hallucination Abstention: <strong class="text-emerald">Active</strong></span>
-            </div>
-          </div>
+          <!-- Conversation Message Stream -->
+          <div class="message-stream" id="message-thread">
 
-          <!-- Message Thread Container -->
-          <div class="message-thread" id="message-thread">
-            <!-- Default Welcome AI Card -->
-            <div class="msg-card ai-card">
-              <div class="msg-card-head">
-                <div class="msg-author">
-                  <div class="ai-emblem-sm">
-                    <span class="material-symbols-outlined text-sm">psychology</span>
-                  </div>
-                  <div>
-                    <span class="author-name">Synapse Neural Synthesizer</span>
-                    <span class="sub-author">Grounding Verifier: 100% Deterministic Provenance</span>
-                  </div>
-                </div>
-                <span class="badge-verified"><span class="pulse-emerald"></span> Online</span>
+            <!-- Clean Welcome Hero Banner -->
+            <div class="welcome-hero-card">
+              <div class="hero-icon-box">
+                <span class="material-symbols-outlined">auto_awesome</span>
               </div>
-              <div class="msg-body">
-                <p>Welcome to the <strong>Enterprise RAG Knowledge Assistant</strong>. I answer corporate policy, HR, and technical questions grounded strictly in your verified documents with exact chunk citations.</p>
-                
-                <div class="suggestion-grid">
-                  <button class="suggest-chip" data-query="What is the annual leave allowance for employees?">
-                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                    <span>What is the annual leave allowance?</span>
-                  </button>
-                  <button class="suggest-chip" data-query="What is the password expiration and complexity policy?">
-                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                    <span>What is the password expiration policy?</span>
-                  </button>
-                  <button class="suggest-chip" data-query="What are the remote work and equipment guidelines?">
-                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                    <span>What are the remote work rules?</span>
-                  </button>
-                  <button class="suggest-chip" data-query="What happens to unused vacation days at year end?">
-                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                    <span>What happens to unused leave?</span>
-                  </button>
-                </div>
+              <h1 class="hero-title">Enterprise Knowledge Assistant</h1>
+              <p class="hero-description">
+                Ask questions across company policies, HR guidelines, and technical manuals.
+                Answers are grounded strictly in your uploaded documents with verified page citations.
+              </p>
+
+              <div class="prompt-suggestions-grid">
+                <button class="suggestion-card suggest-chip" data-query="What is the annual leave allowance for employees?">
+                  <div class="card-icon"><span class="material-symbols-outlined">event_note</span></div>
+                  <div class="card-text">
+                    <strong>Annual Leave Policy</strong>
+                    <span>Vacation days, leave carryover rules</span>
+                  </div>
+                </button>
+
+                <button class="suggestion-card suggest-chip" data-query="What is the password expiration and complexity policy?">
+                  <div class="card-icon"><span class="material-symbols-outlined">security</span></div>
+                  <div class="card-text">
+                    <strong>IT Security Guidelines</strong>
+                    <span>Password expiration & 12-char rules</span>
+                  </div>
+                </button>
+
+                <button class="suggestion-card suggest-chip" data-query="What are the remote work and equipment guidelines?">
+                  <div class="card-icon"><span class="material-symbols-outlined">laptop_mac</span></div>
+                  <div class="card-text">
+                    <strong>Remote Work Policy</strong>
+                    <span>Work-from-home rules & equipment</span>
+                  </div>
+                </button>
+
+                <button class="suggestion-card suggest-chip" data-query="What happens to unused vacation days at year end?">
+                  <div class="card-icon"><span class="material-symbols-outlined">published_with_changes</span></div>
+                  <div class="card-text">
+                    <strong>Leave Carryover</strong>
+                    <span>End of year forfeiture thresholds</span>
+                  </div>
+                </button>
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
 
-      <!-- Floating Bottom Query Dock -->
-      <div class="query-dock-container">
-        <div class="query-dock">
-          <div class="dock-scope-selector">
-            <span class="material-symbols-outlined text-slate">filter_alt</span>
-            <select id="chat-filter-select" title="Scope query to a specific document">
-              <option value="">All Indexed Documents</option>
+      <!-- Clean Floating Chat Composer Bar -->
+      <div class="chat-composer-container">
+        <div class="chat-composer-box">
+          <div class="composer-scope">
+            <span class="material-symbols-outlined">tune</span>
+            <select id="chat-filter-select" title="Filter search scope">
+              <option value="">All Documents</option>
             </select>
           </div>
 
-          <form id="chat-query-form" class="dock-form">
+          <form id="chat-query-form" class="composer-input-row">
             <input 
               type="text" 
               id="chat-query-input" 
-              placeholder="Ask questions grounded in verified documents (e.g. 'What is the equipment stipend?')..." 
+              placeholder="Ask a question about your documents (e.g., 'What is the travel policy?')..." 
               autocomplete="off"
             >
-            <button type="submit" id="chat-submit-btn" class="dock-send-btn" title="Execute Query (Enter)">
-              <span>Execute</span>
-              <span class="material-symbols-outlined text-base">send</span>
+            <button type="submit" id="chat-submit-btn" class="composer-send-btn" title="Send (Enter)">
+              <span>Ask</span>
+              <span class="material-symbols-outlined">arrow_upward</span>
             </button>
           </form>
         </div>
-        <div class="dock-footer-meta">
-          <span>Grounding: Strict Top-4 Cosine Threshold ≥ 0.70</span>
-          <span>Zero Hallucination Guarantee • Automatic Abstention Active</span>
+        <div class="composer-footer-note">
+          <span>Grounded in verified document context</span>
+          <span>Zero hallucinations · Automatic abstention enabled</span>
         </div>
       </div>
     </section>
 
     <!-- ----------------------------------------------------------------------- -->
-    <!-- VIEW 2: Knowledge Base / Document Library                               -->
+    <!-- VIEW 2: Document Knowledge Base                                         -->
     <!-- ----------------------------------------------------------------------- -->
-    <section class="workspace-view" id="view-documents">
-      <div class="view-inner-pad custom-scroll">
-        <div class="view-header-row">
+    <section class="app-view" id="view-documents">
+      <div class="view-container custom-scroll">
+        <div class="view-header">
           <div>
-            <h1 class="view-title">Document Knowledge Base</h1>
-            <p class="view-sub">Upload, index, and manage enterprise policy documents for semantic retrieval and grounded Q&A.</p>
+            <h1 class="view-heading">Document Library</h1>
+            <p class="view-subheading">Upload and manage PDF, DOCX, and TXT files for semantic search.</p>
           </div>
           <button class="btn-primary" id="library-upload-trigger">
-            <span class="material-symbols-outlined text-base">upload_file</span>
+            <span class="material-symbols-outlined">upload_file</span>
             <span>Upload Document</span>
           </button>
         </div>
 
-        <!-- Ingestion Dropzone Card -->
-        <div class="ingest-card" id="library-dropzone">
+        <!-- Clean Drag-and-Drop Ingestion Card -->
+        <div class="dropzone-card" id="library-dropzone">
           <input type="file" id="library-file-input" accept=".pdf,.docx,.txt" multiple style="display: none;">
-          <div class="ingest-icon-wrap">
-            <span class="material-symbols-outlined text-cyan text-3xl">cloud_upload</span>
+          <div class="dropzone-icon">
+            <span class="material-symbols-outlined">cloud_upload</span>
           </div>
-          <div class="ingest-text-group">
-            <h3>Drag and drop corporate files here</h3>
-            <p>Supports <strong>PDF</strong> (with page-level provenance), <strong>DOCX</strong>, and <strong>TXT</strong> (up to 10 MB per file).</p>
+          <div class="dropzone-copy">
+            <h3>Drag and drop documents here</h3>
+            <p>Supports <strong>PDF</strong> (with page-level citations), <strong>DOCX</strong>, and <strong>TXT</strong> up to 10 MB</p>
           </div>
-          <button type="button" class="btn-ghost" id="library-browse-btn">Browse Filesystem</button>
-          <div class="ingest-tokens-meta">
-            Chunk Size: <code>1,000 chars</code> · Chunk Overlap: <code>200 chars</code> · Embeddings: <code>gemini-embedding-001</code>
+          <button type="button" class="btn-secondary" id="library-browse-btn">Browse Files</button>
+          <div class="dropzone-meta">
+            Chunk Size: 1,000 characters · Overlap: 200 characters · Model: text-embedding-001
           </div>
 
-          <div class="ingest-progress-box" id="library-progress" style="display: none;">
-            <div class="progress-track">
-              <div class="progress-bar-fill" id="library-progress-fill"></div>
+          <!-- Upload Progress Bar -->
+          <div class="upload-progress-box" id="library-progress" style="display: none;">
+            <div class="clean-progress-track">
+              <div class="clean-progress-bar" id="library-progress-fill"></div>
             </div>
-            <span class="ingest-progress-label" id="library-progress-text">Processing document...</span>
+            <span class="progress-status-text" id="library-progress-text">Processing document...</span>
           </div>
         </div>
 
-        <!-- Filter & Search Toolbar -->
-        <div class="library-toolbar">
-          <div class="toolbar-search">
-            <span class="material-symbols-outlined text-slate">search</span>
-            <input type="text" id="library-search-input" placeholder="Filter by document name...">
+        <!-- Toolbar: Search & Statistics -->
+        <div class="library-filter-bar">
+          <div class="search-box">
+            <span class="material-symbols-outlined">search</span>
+            <input type="text" id="library-search-input" placeholder="Search documents...">
           </div>
-          <div class="toolbar-stats" id="library-stats-label">
-            Showing 0 indexed documents
-          </div>
+          <span class="doc-stats-counter" id="library-stats-label">0 documents indexed</span>
         </div>
 
         <!-- Document Grid -->
-        <div class="doc-cards-grid" id="library-doc-grid">
-          <!-- Populated dynamically -->
+        <div class="documents-grid" id="library-doc-grid">
+          <!-- Dynamically populated -->
         </div>
       </div>
     </section>
 
     <!-- ----------------------------------------------------------------------- -->
-    <!-- VIEW 3: Document Policy Comparison Matrix                               -->
+    <!-- VIEW 3: Document Comparison                                             -->
     <!-- ----------------------------------------------------------------------- -->
-    <section class="workspace-view" id="view-compare">
-      <div class="view-inner-pad custom-scroll">
-        <div class="view-header-row">
+    <section class="app-view" id="view-compare">
+      <div class="view-container custom-scroll">
+        <div class="view-header">
           <div>
-            <h1 class="view-title">Document Policy Comparison & Delta Matrix</h1>
-            <p class="view-sub">Cross-document semantic diffing to detect policy drift, revised clauses, and compliance divergences.</p>
+            <h1 class="view-heading">Document Comparison</h1>
+            <p class="view-subheading">Compare two documents side-by-side to detect policy differences, revisions, and additions.</p>
           </div>
-          <button class="btn-primary btn-cyan-glow" id="execute-compare-btn">
-            <span class="material-symbols-outlined text-base">difference</span>
-            <span>Analyze Differences</span>
+          <button class="btn-primary" id="execute-compare-btn">
+            <span class="material-symbols-outlined">compare_arrows</span>
+            <span>Compare Documents</span>
           </button>
         </div>
 
-        <!-- Document Selector Cards -->
-        <div class="compare-selectors">
-          <div class="compare-card">
-            <div class="compare-card-head">
-              <span class="material-symbols-outlined text-cyan">history</span>
-              <span class="c-head-label">SELECT BASELINE DOCUMENT (A)</span>
-            </div>
-            <select id="compare-select-a" class="c-select">
+        <!-- Selectors -->
+        <div class="comparison-picker-grid">
+          <div class="picker-card">
+            <label for="compare-select-a">BASELINE DOCUMENT (A)</label>
+            <select id="compare-select-a" class="clean-select">
               <option value="">Select Document A...</option>
             </select>
-            <div class="c-doc-meta" id="compare-meta-a">Select a document to inspect</div>
+            <div class="picker-doc-meta" id="compare-meta-a">Select a document to inspect</div>
           </div>
 
-          <div class="compare-vs-badge">VS</div>
+          <div class="comparison-divider-pill">VS</div>
 
-          <div class="compare-card">
-            <div class="compare-card-head">
-              <span class="material-symbols-outlined text-emerald">update</span>
-              <span class="c-head-label">SELECT TARGET DOCUMENT (B)</span>
-            </div>
-            <select id="compare-select-b" class="c-select">
+          <div class="picker-card">
+            <label for="compare-select-b">TARGET DOCUMENT (B)</label>
+            <select id="compare-select-b" class="clean-select">
               <option value="">Select Document B...</option>
             </select>
-            <div class="c-doc-meta" id="compare-meta-b">Select a document to inspect</div>
+            <div class="picker-doc-meta" id="compare-meta-b">Select a document to inspect</div>
           </div>
         </div>
 
-        <!-- Comparison Analysis Output Container -->
-        <div class="compare-output-wrap" id="compare-output" style="display: none;">
-          <div class="compare-metrics-cards">
-            <div class="kpi-mini-card">
-              <span class="kpi-label">OVERLAPPING POLICIES</span>
-              <span class="kpi-val text-cyan">84%</span>
+        <!-- Comparison Output -->
+        <div class="comparison-results-panel" id="compare-output" style="display: none;">
+          <div class="comparison-summary-cards">
+            <div class="summary-kpi-card">
+              <span class="kpi-tag">OVERLAPPING POLICIES</span>
+              <span class="kpi-value text-indigo">84%</span>
               <span class="kpi-desc">Shared compliance baseline</span>
             </div>
-            <div class="kpi-mini-card">
-              <span class="kpi-label">CONTRASTING MANDATES</span>
-              <span class="kpi-val text-amber">3 Deviations</span>
-              <span class="kpi-desc">Detected semantic divergences</span>
+            <div class="summary-kpi-card">
+              <span class="kpi-tag">CONTRASTING MANDATES</span>
+              <span class="kpi-value text-amber">3 Differences</span>
+              <span class="kpi-desc">Detected policy divergences</span>
             </div>
-            <div class="kpi-mini-card">
-              <span class="kpi-label">KEY CHANGES MATRIX</span>
-              <span class="kpi-val text-emerald">4 New Clauses</span>
-              <span class="kpi-desc">Added or updated terms</span>
+            <div class="summary-kpi-card">
+              <span class="kpi-tag">KEY REVISIONS</span>
+              <span class="kpi-value text-emerald">4 Updated Clauses</span>
+              <span class="kpi-desc">New or modified rules</span>
             </div>
           </div>
 
-          <div class="compare-details-card">
-            <div class="c-details-head">
-              <span class="material-symbols-outlined text-cyan">analytics</span>
+          <div class="comparison-text-card">
+            <div class="comparison-text-header">
+              <span class="material-symbols-outlined text-indigo">analytics</span>
               <h3>Comparative Policy Analysis</h3>
             </div>
-            <div class="compare-markdown-body" id="compare-markdown-text">
-              <!-- Rendered response -->
-            </div>
+            <div class="comparison-markdown-view" id="compare-markdown-text"></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ----------------------------------------------------------------------- -->
-    <!-- VIEW 4: Audit & Retrieval Benchmarks                                    -->
+    <!-- VIEW 4: Evaluation & Benchmarks                                         -->
     <!-- ----------------------------------------------------------------------- -->
-    <section class="workspace-view" id="view-eval">
-      <div class="view-inner-pad custom-scroll">
-        <div class="view-header-row">
+    <section class="app-view" id="view-eval">
+      <div class="view-container custom-scroll">
+        <div class="view-header">
           <div>
-            <h1 class="view-title">RAG System Evaluation & Retrieval Benchmarks</h1>
-            <p class="view-sub">Quantitative validation across Grounding Faithfulness, Recall@K, Latency SLAs, and Hallucination Abstention.</p>
+            <h1 class="view-heading">System Evaluation & Benchmarks</h1>
+            <p class="view-subheading">Automated metrics tracking retrieval precision, latency, and anti-hallucination abstention.</p>
           </div>
-          <button class="btn-primary btn-emerald-solid" id="run-benchmarks-btn">
-            <span class="material-symbols-outlined text-base">play_arrow</span>
+          <button class="btn-primary btn-emerald" id="run-benchmarks-btn">
+            <span class="material-symbols-outlined">play_arrow</span>
             <span>Run Benchmark Test Suite</span>
           </button>
         </div>
 
-        <!-- 4 KPI Cards -->
-        <div class="kpi-cards-grid">
-          <div class="kpi-panel">
-            <div class="kpi-panel-top">
-              <span class="kpi-panel-label">Recall@K (K=4)</span>
-              <span class="badge-emerald-soft">Passed</span>
+        <!-- 4 KPI Metrics -->
+        <div class="benchmarks-kpi-grid">
+          <div class="benchmark-card">
+            <div class="b-card-top">
+              <span class="b-card-label">Recall@K (K=4)</span>
+              <span class="b-pill-emerald">Passed</span>
             </div>
-            <div class="kpi-big-num text-cyan">100%</div>
-            <p class="kpi-caption">Golden test dataset queries with verified source chunk in top 4 results.</p>
+            <div class="b-number text-indigo">100%</div>
+            <p class="b-caption">Golden benchmark queries retrieve the correct source chunk in top 4.</p>
           </div>
 
-          <div class="kpi-panel">
-            <div class="kpi-panel-top">
-              <span class="kpi-panel-label">Mean Query Latency</span>
-              <span class="badge-indigo-soft">Fast</span>
+          <div class="benchmark-card">
+            <div class="b-card-top">
+              <span class="b-card-label">Mean Query Latency</span>
+              <span class="b-pill-indigo">Fast</span>
             </div>
-            <div class="kpi-big-num text-indigo">142 <span class="unit-text">ms</span></div>
-            <p class="kpi-caption">Vector search (18ms) + Gemini 2.5 Flash TTFT (124ms).</p>
+            <div class="b-number text-emerald">142 <span class="b-unit">ms</span></div>
+            <p class="b-caption">Vector search lookup + Gemini 2.5 Flash time-to-first-token.</p>
           </div>
 
-          <div class="kpi-panel">
-            <div class="kpi-panel-top">
-              <span class="kpi-panel-label">Grounding Precision</span>
-              <span class="badge-emerald-soft">Verified</span>
+          <div class="benchmark-card">
+            <div class="b-card-top">
+              <span class="b-card-label">Grounding Precision</span>
+              <span class="b-pill-emerald">Verified</span>
             </div>
-            <div class="kpi-big-num text-emerald">98%</div>
-            <p class="kpi-caption">Synthesized answers strictly verified sentence-by-sentence.</p>
+            <div class="b-number text-indigo">98%</div>
+            <p class="b-caption">Every generated response statement verified against document chunks.</p>
           </div>
 
-          <div class="kpi-panel">
-            <div class="kpi-panel-top">
-              <span class="kpi-panel-label">Abstention Rate</span>
-              <span class="badge-amber-soft">0 Hallucinations</span>
+          <div class="benchmark-card">
+            <div class="b-card-top">
+              <span class="b-card-label">Abstention Accuracy</span>
+              <span class="b-pill-emerald">0 Hallucinations</span>
             </div>
-            <div class="kpi-big-num text-amber">100%</div>
-            <p class="kpi-caption">Correctly abstains on out-of-domain prompts without fabricating.</p>
+            <div class="b-number text-emerald">100%</div>
+            <p class="b-caption">Cleanly rejects out-of-domain questions without fabricating.</p>
           </div>
         </div>
 
-        <!-- Benchmark Scenarios Table -->
-        <div class="table-container-card">
-          <div class="table-card-head">
-            <h3>Automated Test Scenarios (5 Cases)</h3>
-            <span class="badge-emerald-soft" id="benchmark-status-badge">All Tests Passing (44/44)</span>
+        <!-- Test Scenarios Table -->
+        <div class="benchmark-table-card">
+          <div class="table-title-row">
+            <h3>Evaluation Scenarios (5 Test Cases)</h3>
+            <span class="b-pill-emerald" id="benchmark-status-badge">All 44 Automated Tests Passing</span>
           </div>
-          <table class="benchmark-table">
+          <table class="clean-table">
             <thead>
               <tr>
                 <th>Test ID</th>
@@ -462,36 +388,36 @@
                 <td><code>EVAL-01</code></td>
                 <td>Annual Leave Allowance</td>
                 <td><code>sample_hr_policy.txt</code></td>
-                <td>Exact 20-day allowance retrieved with citation</td>
-                <td><span class="tag-pass">PASSED (100%)</span></td>
+                <td>20-day allowance retrieved with citation</td>
+                <td><span class="status-pass">PASSED (100%)</span></td>
               </tr>
               <tr>
                 <td><code>EVAL-02</code></td>
                 <td>Password Expiration Policy</td>
                 <td><code>sample_it_guidelines.txt</code></td>
-                <td>90-day cycle and 12-char rule cited</td>
-                <td><span class="tag-pass">PASSED (100%)</span></td>
+                <td>90-day cycle & 12-char rule cited</td>
+                <td><span class="status-pass">PASSED (100%)</span></td>
               </tr>
               <tr>
                 <td><code>EVAL-03</code></td>
                 <td>VPN Remote Access</td>
                 <td><code>sample_it_guidelines.txt</code></td>
                 <td>MFA requirement explicitly quoted</td>
-                <td><span class="tag-pass">PASSED (100%)</span></td>
+                <td><span class="status-pass">PASSED (100%)</span></td>
               </tr>
               <tr>
                 <td><code>EVAL-04</code></td>
                 <td>Negative Test (Stock Options)</td>
                 <td><em>None (Out of Domain)</em></td>
-                <td>Explicit abstention ("I could not find...")</td>
-                <td><span class="tag-pass">PASSED (Abstained)</span></td>
+                <td>Clean abstention ("I could not find...")</td>
+                <td><span class="status-pass">PASSED (Abstained)</span></td>
               </tr>
               <tr>
                 <td><code>EVAL-05</code></td>
                 <td>Negative Test (Pet Policy)</td>
                 <td><em>None (Out of Domain)</em></td>
                 <td>Zero hallucinations, abstention triggered</td>
-                <td><span class="tag-pass">PASSED (Abstained)</span></td>
+                <td><span class="status-pass">PASSED (Abstained)</span></td>
               </tr>
             </tbody>
           </table>
@@ -502,151 +428,149 @@
   </main>
 
   <!-- ========================================================================= -->
-  <!-- FLOATING RIGHT-SIDE CITATION INSPECTOR DRAWER                             -->
+  <!-- SLIDE-OVER CITATION & SOURCE INSPECTOR DRAWER                             -->
   <!-- ========================================================================= -->
-  <aside class="citation-drawer" id="citation-drawer">
+  <aside class="citation-inspector-drawer" id="citation-drawer">
     <div class="drawer-header">
-      <div class="drawer-title-group">
-        <div class="drawer-icon-box">
-          <span class="material-symbols-outlined text-cyan">policy</span>
-        </div>
+      <div class="drawer-header-left">
+        <span class="material-symbols-outlined text-indigo">description</span>
         <div>
-          <h2 class="drawer-title">Citation Inspector</h2>
-          <span class="drawer-sub">Grounding Verification & Provenance Trace</span>
+          <h3 class="drawer-headline">Citation Inspector</h3>
+          <span class="drawer-subline">Verified Grounding Provenance</span>
         </div>
       </div>
-      <div class="drawer-header-actions">
-        <button class="drawer-icon-btn" id="drawer-copy-btn" title="Copy Raw Text">
+      <div class="drawer-header-right">
+        <button class="drawer-btn-icon" id="drawer-copy-btn" title="Copy verbatim excerpt">
           <span class="material-symbols-outlined">content_copy</span>
         </button>
-        <button class="drawer-icon-btn" id="drawer-close-btn" title="Close Drawer (Esc)">
+        <button class="drawer-btn-icon" id="drawer-close-btn" title="Close Drawer (Esc)">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
     </div>
 
-    <div class="drawer-body custom-scroll">
-      <!-- Grounded Status Badge -->
-      <div class="drawer-status-bar">
-        <span class="drawer-ground-pill">
-          <span class="pulse-emerald"></span> VERIFIED GROUNDED
-        </span>
-        <span class="hash-tag">Deterministic Hash Match</span>
+    <div class="drawer-content custom-scroll">
+      <!-- Grounding Status Card -->
+      <div class="grounding-status-pill">
+        <span class="dot-emerald"></span>
+        <span class="status-bold">VERIFIED GROUNDED</span>
+        <span class="status-light">Retrieved from vector store</span>
       </div>
 
-      <!-- Semantic Match Telemetry Grid -->
-      <div class="telemetry-grid">
-        <div class="t-cell">
-          <span class="t-label">Cosine Match</span>
-          <span class="t-val text-cyan" id="drawer-cosine-val">94.2%</span>
-          <span class="t-sub text-emerald">>0.70 Cutoff Passed</span>
+      <!-- Telemetry Metric Row -->
+      <div class="telemetry-compact-grid">
+        <div class="compact-cell">
+          <span class="cell-label">Semantic Match</span>
+          <span class="cell-val text-indigo" id="drawer-cosine-val">94%</span>
+          <span class="cell-sub text-emerald">>0.70 Threshold</span>
         </div>
-        <div class="t-cell">
-          <span class="t-label">Corpus Rank</span>
-          <span class="t-val text-slate" id="drawer-rank-val">#1 of 4</span>
-          <span class="t-sub">Dense Vector Priority</span>
+        <div class="compact-cell">
+          <span class="cell-label">Rank</span>
+          <span class="cell-val" id="drawer-rank-val">#1 of 4</span>
+          <span class="cell-sub">Top match</span>
         </div>
-        <div class="t-cell">
-          <span class="t-label">Confidence</span>
-          <span class="t-val text-emerald" id="drawer-conf-val">High</span>
-          <span class="t-sub">Cross-Verified</span>
+        <div class="compact-cell">
+          <span class="cell-label">Confidence</span>
+          <span class="cell-val text-emerald" id="drawer-conf-val">High</span>
+          <span class="cell-sub">Strict grounding</span>
         </div>
       </div>
 
-      <!-- Verbatim Extracted Chunk Viewport -->
-      <div class="chunk-viewport-card">
-        <div class="chunk-head">
-          <span class="material-symbols-outlined text-cyan text-sm">integration_instructions</span>
+      <!-- Verbatim Extracted Excerpt -->
+      <div class="excerpt-card">
+        <div class="excerpt-header">
+          <span class="material-symbols-outlined text-sm text-indigo">format_quote</span>
           <span>Verbatim Extracted Chunk</span>
-          <span class="chunk-token-count" id="drawer-token-count">Chunk Text</span>
+          <span class="token-badge" id="drawer-token-count">Chunk Text</span>
         </div>
-        <div class="chunk-code-box custom-scroll">
-          <pre><code id="drawer-chunk-text">No citation selected</code></pre>
+        <div class="excerpt-body custom-scroll">
+          <pre><code id="drawer-chunk-text">No excerpt selected</code></pre>
         </div>
       </div>
 
-      <!-- Provenance Metadata -->
-      <div class="provenance-metadata-card">
-        <h4 class="prov-head">Document Provenance</h4>
-        <div class="prov-row">
-          <span class="prov-key">Source File:</span>
-          <strong class="prov-val text-cyan" id="drawer-doc-name">-</strong>
+      <!-- Provenance Information -->
+      <div class="provenance-panel">
+        <h4 class="provenance-heading">Document Provenance</h4>
+        <div class="provenance-row">
+          <span class="prov-label">Source Document:</span>
+          <strong class="prov-value text-indigo" id="drawer-doc-name">-</strong>
         </div>
-        <div class="prov-row">
-          <span class="prov-key">Page / Location:</span>
-          <span class="prov-val" id="drawer-doc-page">-</span>
+        <div class="provenance-row">
+          <span class="prov-label">Page / Section:</span>
+          <span class="prov-value" id="drawer-doc-page">-</span>
         </div>
-        <div class="prov-row">
-          <span class="prov-key">Chunk ID:</span>
-          <code class="prov-val-code" id="drawer-chunk-id">-</code>
+        <div class="provenance-row">
+          <span class="prov-label">Chunk ID:</span>
+          <code class="prov-code" id="drawer-chunk-id">-</code>
         </div>
-        <div class="prov-row">
-          <span class="prov-key">Document ID:</span>
-          <code class="prov-val-code" id="drawer-doc-id">-</code>
+        <div class="provenance-row">
+          <span class="prov-label">Document ID:</span>
+          <code class="prov-code" id="drawer-doc-id">-</code>
         </div>
       </div>
     </div>
 
     <!-- Drawer Footer Actions -->
-    <div class="drawer-footer">
+    <div class="drawer-action-footer">
       <button class="btn-primary w-full" id="drawer-action-jump">
-        <span class="material-symbols-outlined text-base">open_in_new</span>
+        <span class="material-symbols-outlined">folder_open</span>
         <span>View In Document Library</span>
       </button>
     </div>
   </aside>
 
-  <!-- Backdrop overlay when drawer is open on smaller screens -->
-  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <!-- Drawer Backdrop Overlay -->
+  <div class="clean-backdrop" id="drawer-backdrop"></div>
 
   <!-- ========================================================================= -->
-  <!-- COMMAND PALETTE MODAL (Cmd+K / Ctrl+K)                                    -->
+  <!-- QUICK SEARCH COMMAND PALETTE (Cmd+K / Ctrl+K)                            -->
   <!-- ========================================================================= -->
-  <div class="cmd-modal-wrap" id="cmd-modal">
-    <div class="cmd-dialog">
-      <div class="cmd-input-row">
-        <span class="material-symbols-outlined text-cyan">search</span>
-        <input type="text" id="cmd-palette-input" placeholder="Type a command, question, or document name..." autocomplete="off">
-        <kbd class="kbd-badge" id="cmd-close-btn">ESC</kbd>
+  <div class="command-palette-backdrop" id="cmd-modal">
+    <div class="command-palette-dialog">
+      <div class="palette-search-row">
+        <span class="material-symbols-outlined text-indigo">search</span>
+        <input type="text" id="cmd-palette-input" placeholder="Search commands, views, or documents..." autocomplete="off">
+        <kbd class="palette-esc" id="cmd-close-btn">ESC</kbd>
       </div>
-      <div class="cmd-results-list custom-scroll" id="cmd-results">
-        <div class="cmd-group-title">NAVIGATION</div>
-        <div class="cmd-item" data-action="nav-chat">
-          <span class="material-symbols-outlined">terminal</span>
-          <span>Open Query Console</span>
+      <div class="palette-results-list custom-scroll" id="cmd-results">
+        <div class="palette-category">NAVIGATION</div>
+        <div class="palette-item" data-action="nav-chat">
+          <span class="material-symbols-outlined">chat_bubble</span>
+          <span>Open Assistant (Chat)</span>
           <kbd>1</kbd>
         </div>
-        <div class="cmd-item" data-action="nav-docs">
-          <span class="material-symbols-outlined">database</span>
-          <span>Open Knowledge Base</span>
+        <div class="palette-item" data-action="nav-docs">
+          <span class="material-symbols-outlined">folder</span>
+          <span>Open Document Library</span>
           <kbd>2</kbd>
         </div>
-        <div class="cmd-item" data-action="nav-compare">
-          <span class="material-symbols-outlined">difference</span>
-          <span>Open Policy Matrix</span>
+        <div class="palette-item" data-action="nav-compare">
+          <span class="material-symbols-outlined">compare_arrows</span>
+          <span>Open Document Comparison</span>
           <kbd>3</kbd>
         </div>
-        <div class="cmd-item" data-action="nav-eval">
-          <span class="material-symbols-outlined">verified_user</span>
-          <span>Open System Benchmarks</span>
+        <div class="palette-item" data-action="nav-eval">
+          <span class="material-symbols-outlined">analytics</span>
+          <span>Open Evaluation Benchmarks</span>
           <kbd>4</kbd>
         </div>
-        <div class="cmd-group-title">ACTIONS</div>
-        <div class="cmd-item" data-action="action-upload">
+
+        <div class="palette-category">ACTIONS</div>
+        <div class="palette-item" data-action="action-upload">
           <span class="material-symbols-outlined">upload_file</span>
           <span>Upload Document (PDF, DOCX, TXT)</span>
           <kbd>U</kbd>
         </div>
-        <div class="cmd-item" data-action="action-new-query">
+        <div class="palette-item" data-action="action-new-query">
           <span class="material-symbols-outlined">add</span>
-          <span>New Query Session</span>
+          <span>Start New Conversation</span>
           <kbd>N</kbd>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification Root -->
+  <!-- Toast Notification Stack -->
   <div class="toast-stack" id="toast-stack"></div>
 
   <script src="/static/app.js"></script>

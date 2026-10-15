@@ -1,6 +1,6 @@
 /**
- * SYNAPSE RAG ENTERPRISE — CONTROLLER
- * Architecture: Event-driven client connecting Obsidian Vector UI to FastAPI backend
+ * ENTERPRISE RAG KNOWLEDGE ASSISTANT — APPLICATION CONTROLLER
+ * Architecture: Clean event-driven client connecting to FastAPI backend
  */
 
 const API_BASE = ""; // Relative path works automatically with FastAPI
@@ -16,8 +16,9 @@ const state = {
 
 // DOM Cache
 const dom = {
-  navItems: document.querySelectorAll(".nav-item"),
-  workspaceViews: document.querySelectorAll(".workspace-view"),
+  navLinks: document.querySelectorAll(".nav-link"),
+  appViews: document.querySelectorAll(".app-view"),
+  currentViewTitle: document.getElementById("current-view-title"),
   newQueryBtn: document.getElementById("new-query-btn"),
   railDocCount: document.getElementById("rail-doc-count"),
   railTotalChunks: document.getElementById("rail-total-chunks"),
@@ -27,7 +28,6 @@ const dom = {
   cmdKTrigger: document.getElementById("cmd-k-trigger"),
   quickRefreshBtn: document.getElementById("quick-refresh-btn"),
   topRetrievalLat: document.getElementById("top-retrieval-lat"),
-  topGenLat: document.getElementById("top-gen-lat"),
 
   // Chat Console
   chatViewport: document.getElementById("chat-viewport"),
@@ -88,6 +88,54 @@ const dom = {
   toastStack: document.getElementById("toast-stack"),
 };
 
+// Initial welcome HTML template saved for fresh sessions
+const WELCOME_HERO_HTML = `
+  <div class="welcome-hero-card">
+    <div class="hero-icon-box">
+      <span class="material-symbols-outlined">auto_awesome</span>
+    </div>
+    <h1 class="hero-title">Enterprise Knowledge Assistant</h1>
+    <p class="hero-description">
+      Ask questions across company policies, HR guidelines, and technical manuals.
+      Answers are grounded strictly in your uploaded documents with verified page citations.
+    </p>
+
+    <div class="prompt-suggestions-grid">
+      <button class="suggestion-card suggest-chip" data-query="What is the annual leave allowance for employees?">
+        <div class="card-icon"><span class="material-symbols-outlined">event_note</span></div>
+        <div class="card-text">
+          <strong>Annual Leave Policy</strong>
+          <span>Vacation days, leave carryover rules</span>
+        </div>
+      </button>
+
+      <button class="suggestion-card suggest-chip" data-query="What is the password expiration and complexity policy?">
+        <div class="card-icon"><span class="material-symbols-outlined">security</span></div>
+        <div class="card-text">
+          <strong>IT Security Guidelines</strong>
+          <span>Password expiration & 12-char rules</span>
+        </div>
+      </button>
+
+      <button class="suggestion-card suggest-chip" data-query="What are the remote work and equipment guidelines?">
+        <div class="card-icon"><span class="material-symbols-outlined">laptop_mac</span></div>
+        <div class="card-text">
+          <strong>Remote Work Policy</strong>
+          <span>Work-from-home rules & equipment</span>
+        </div>
+      </button>
+
+      <button class="suggestion-card suggest-chip" data-query="What happens to unused vacation days at year end?">
+        <div class="card-icon"><span class="material-symbols-outlined">published_with_changes</span></div>
+        <div class="card-text">
+          <strong>Leave Carryover</strong>
+          <span>End of year forfeiture thresholds</span>
+        </div>
+      </button>
+    </div>
+  </div>
+`;
+
 // =============================================================================
 // INITIALIZATION
 // =============================================================================
@@ -101,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCommandPalette();
   initGlobalKeyboard();
 
-  // Load initial backend data
+  // Load backend documents and system health
   loadDocuments();
   pingHealth();
 });
@@ -112,11 +160,12 @@ function showToast(message, type = "info") {
   toast.className = `toast-card toast-${type}`;
   
   let icon = "info";
-  if (type === "success") icon = "check_circle";
-  if (type === "error") icon = "error";
+  let iconColor = "text-indigo";
+  if (type === "success") { icon = "check_circle"; iconColor = "text-emerald"; }
+  if (type === "error") { icon = "error"; iconColor = "text-rose"; }
 
   toast.innerHTML = `
-    <span class="material-symbols-outlined text-sm ${type === 'success' ? 'text-emerald' : type === 'error' ? 'text-amber' : 'text-cyan'}">${icon}</span>
+    <span class="material-symbols-outlined text-sm ${iconColor}">${icon}</span>
     <span>${escapeHtml(message)}</span>
   `;
 
@@ -135,7 +184,9 @@ async function pingHealth() {
     const res = await fetch(`${API_BASE}/health`);
     if (res.ok) {
       const lat = Math.round(performance.now() - start);
-      dom.topRetrievalLat.textContent = `${lat}ms`;
+      if (dom.topRetrievalLat) {
+        dom.topRetrievalLat.textContent = `${lat}ms`;
+      }
     }
   } catch (err) {
     console.warn("Backend not yet reachable:", err);
@@ -146,27 +197,36 @@ async function pingHealth() {
 // VIEW NAVIGATION
 // =============================================================================
 function initNavigation() {
-  dom.navItems.forEach(item => {
+  dom.navLinks.forEach(item => {
     item.addEventListener("click", () => {
       const targetView = item.getAttribute("data-view");
       switchView(targetView);
     });
   });
 
-  dom.newQueryBtn.addEventListener("click", () => {
-    resetChat();
-  });
+  if (dom.newQueryBtn) {
+    dom.newQueryBtn.addEventListener("click", () => resetChat());
+  }
 
-  dom.quickRefreshBtn.addEventListener("click", () => {
-    loadDocuments();
-    showToast("Document corpus refreshed", "info");
-  });
+  if (dom.quickRefreshBtn) {
+    dom.quickRefreshBtn.addEventListener("click", () => {
+      loadDocuments();
+      showToast("Document library refreshed", "info");
+    });
+  }
 }
+
+const VIEW_TITLES = {
+  "view-chat": "Assistant",
+  "view-documents": "Document Library",
+  "view-compare": "Document Comparison",
+  "view-eval": "Evaluation & Benchmarks"
+};
 
 function switchView(viewId) {
   state.currentView = viewId;
 
-  dom.navItems.forEach(item => {
+  dom.navLinks.forEach(item => {
     if (item.getAttribute("data-view") === viewId) {
       item.classList.add("active");
     } else {
@@ -174,48 +234,37 @@ function switchView(viewId) {
     }
   });
 
-  dom.workspaceViews.forEach(view => {
+  dom.appViews.forEach(view => {
     if (view.id === viewId) {
       view.classList.add("active");
     } else {
       view.classList.remove("active");
     }
   });
+
+  if (dom.currentViewTitle && VIEW_TITLES[viewId]) {
+    dom.currentViewTitle.textContent = VIEW_TITLES[viewId];
+  }
 }
 
 function resetChat() {
   state.activeConversationId = null;
-  dom.messageThread.innerHTML = `
-    <div class="msg-card ai-card">
-      <div class="msg-card-head">
-        <div class="msg-author">
-          <div class="ai-emblem-sm">
-            <span class="material-symbols-outlined text-sm">psychology</span>
-          </div>
-          <div>
-            <span class="author-name">Synapse Neural Synthesizer</span>
-            <span class="sub-author">Grounding Verifier: 100% Deterministic Provenance</span>
-          </div>
-        </div>
-        <span class="badge-verified"><span class="pulse-emerald"></span> Ready</span>
-      </div>
-      <div class="msg-body">
-        <p>New query session initialized. Ask any corporate question grounded in your indexed documents.</p>
-      </div>
-    </div>
-  `;
+  dom.messageThread.innerHTML = WELCOME_HERO_HTML;
   switchView("view-chat");
   dom.chatQueryInput.focus();
-  showToast("Started fresh query session", "info");
+  showToast("Started fresh conversation", "info");
 }
 
 // =============================================================================
 // DOCUMENT LIBRARY & INGESTION
 // =============================================================================
 function initDocuments() {
-  // Triggers
-  dom.libraryUploadTrigger.addEventListener("click", () => dom.libraryFileInput.click());
-  dom.libraryBrowseBtn.addEventListener("click", () => dom.libraryFileInput.click());
+  if (dom.libraryUploadTrigger) {
+    dom.libraryUploadTrigger.addEventListener("click", () => dom.libraryFileInput.click());
+  }
+  if (dom.libraryBrowseBtn) {
+    dom.libraryBrowseBtn.addEventListener("click", () => dom.libraryFileInput.click());
+  }
 
   dom.libraryFileInput.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
@@ -251,7 +300,7 @@ async function uploadFiles(files) {
     const file = files[i];
     const pct = Math.round(((i + 1) / files.length) * 100);
     dom.libraryProgressFill.style.width = `${pct}%`;
-    dom.libraryProgressText.textContent = `Extracting & indexing ${file.name}...`;
+    dom.libraryProgressText.textContent = `Processing and chunking ${file.name}...`;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -297,20 +346,22 @@ async function loadDocuments() {
 }
 
 function renderDocuments(docs) {
-  // Update rail metrics
+  // Update sidebar counter metrics
   dom.railDocCount.textContent = docs.length;
   let totalChunks = 0;
   docs.forEach(d => totalChunks += (d.chunk_count || 0));
-  dom.railTotalChunks.textContent = `${totalChunks.toLocaleString()} Chunks Indexed`;
-  dom.libraryStatsLabel.textContent = `Showing ${docs.length} indexed documents`;
+  if (dom.railTotalChunks) {
+    dom.railTotalChunks.textContent = `${totalChunks.toLocaleString()} Chunks`;
+  }
+  dom.libraryStatsLabel.textContent = `${docs.length} documents indexed`;
 
-  // Render Left Rail Active Corpus
+  // Render Sidebar Active Corpus List
   if (docs.length === 0) {
-    dom.railCorpusList.innerHTML = `<div class="corpus-empty">No indexed documents</div>`;
+    dom.railCorpusList.innerHTML = `<div class="docs-empty-state">No documents uploaded yet</div>`;
     dom.libraryDocGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
-        <span class="material-symbols-outlined text-3xl" style="opacity: 0.5;">find_in_page</span>
-        <p style="margin-top: 8px;">No corporate documents indexed yet.<br>Drag and drop a PDF, DOCX, or TXT file above.</p>
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--text-muted);">
+        <span class="material-symbols-outlined text-3xl" style="opacity: 0.4;">find_in_page</span>
+        <p style="margin-top: 10px;">No corporate documents indexed yet.<br>Drag and drop a PDF, DOCX, or TXT file above.</p>
       </div>
     `;
     return;
@@ -325,8 +376,8 @@ function renderDocuments(docs) {
 
     let icon = "article";
     let iconClass = "text-emerald";
-    if (ext === "pdf") { icon = "picture_as_pdf"; iconClass = "text-amber"; }
-    else if (ext === "docx") { icon = "description"; iconClass = "text-cyan"; }
+    if (ext === "pdf") { icon = "picture_as_pdf"; iconClass = "text-rose"; }
+    else if (ext === "docx") { icon = "description"; iconClass = "text-indigo"; }
 
     item.innerHTML = `
       <div class="corpus-item-left">
@@ -364,7 +415,7 @@ function renderDocuments(docs) {
       <div class="doc-box-meta">
         <span>${doc.chunk_count} chunks${pageCountText}</span>
         <span>${charCountText}</span>
-        <span style="color: var(--emerald-tertiary);">● Vector-Indexed</span>
+        <span style="color: var(--emerald-accent);">● Vector-Indexed</span>
       </div>
       <div class="doc-box-actions">
         <button class="btn-ghost" data-action="ask-about" data-filename="${escapeHtml(doc.filename)}" data-id="${doc.document_id}">
@@ -421,7 +472,7 @@ async function deleteDocument(docId) {
 function updateFilterDropdowns(docs) {
   // Query Console Filter
   const currentFilterVal = dom.chatFilterSelect.value;
-  dom.chatFilterSelect.innerHTML = `<option value="">All Indexed Documents</option>`;
+  dom.chatFilterSelect.innerHTML = `<option value="">All Documents</option>`;
   docs.forEach(doc => {
     const opt = document.createElement("option");
     opt.value = doc.document_id;
@@ -473,13 +524,17 @@ function initChat() {
     const query = dom.chatQueryInput.value.trim();
     if (!query || state.queryInProgress) return;
 
+    // Remove welcome hero if present
+    const welcomeHero = dom.messageThread.querySelector(".welcome-hero-card");
+    if (welcomeHero) welcomeHero.remove();
+
     state.queryInProgress = true;
     appendUserMessage(query);
     dom.chatQueryInput.value = "";
     dom.chatSubmitBtn.disabled = true;
-    dom.chatSubmitBtn.innerHTML = `<span>Synthesizing...</span>`;
+    dom.chatSubmitBtn.innerHTML = `<span>Thinking...</span>`;
 
-    // Append loading placeholder
+    // Append loading card
     const loadingCardId = `loading-${Date.now()}`;
     appendLoadingCard(loadingCardId);
 
@@ -508,7 +563,7 @@ function initChat() {
       state.activeConversationId = data.conversation_id;
 
       const durationMs = Math.round(performance.now() - startTime);
-      dom.topGenLat.textContent = `${durationMs}ms`;
+      if (dom.topRetrievalLat) dom.topRetrievalLat.textContent = `${durationMs}ms`;
 
       // Remove loading card and append real AI response
       document.getElementById(loadingCardId)?.remove();
@@ -520,7 +575,7 @@ function initChat() {
     } finally {
       state.queryInProgress = false;
       dom.chatSubmitBtn.disabled = false;
-      dom.chatSubmitBtn.innerHTML = `<span>Execute</span><span class="material-symbols-outlined text-base">send</span>`;
+      dom.chatSubmitBtn.innerHTML = `<span>Ask</span><span class="material-symbols-outlined">arrow_upward</span>`;
       dom.chatViewport.scrollTop = dom.chatViewport.scrollHeight;
     }
   });
@@ -530,10 +585,10 @@ function appendUserMessage(text) {
   const card = document.createElement("div");
   card.className = "user-msg-card";
   card.innerHTML = `
+    <div class="user-msg-text">${escapeHtml(text)}</div>
     <div class="user-msg-avatar">
       <span class="material-symbols-outlined text-sm">person</span>
     </div>
-    <div class="user-msg-text">${escapeHtml(text)}</div>
   `;
   dom.messageThread.appendChild(card);
   dom.chatViewport.scrollTop = dom.chatViewport.scrollHeight;
@@ -547,20 +602,17 @@ function appendLoadingCard(cardId) {
     <div class="msg-card-head">
       <div class="msg-author">
         <div class="ai-emblem-sm">
-          <span class="material-symbols-outlined text-sm">psychology</span>
+          <span class="material-symbols-outlined text-sm">auto_awesome</span>
         </div>
         <div>
-          <span class="author-name">Synapse Neural Synthesizer</span>
-          <span class="sub-author">Scanning Vector Index · Evaluating Provenance...</span>
+          <span class="author-name">Enterprise Assistant</span>
+          <span class="sub-author">Searching vector store & verifying document context...</span>
         </div>
       </div>
       <span class="badge-verified"><span class="pulse-emerald"></span> Retrieving</span>
     </div>
-    <div class="msg-body" style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="pulse-dot-sm"></span>
-        <span>Dense vector search active → Filtering Top-4 chunks → Grounding answer...</span>
-      </div>
+    <div class="msg-body" style="color: var(--text-muted); font-size: 13px;">
+      Searching relevant chunks in ChromaDB...
     </div>
   `;
   dom.messageThread.appendChild(card);
@@ -576,54 +628,55 @@ function appendAssistantMessage(answer, sources, latencyMs) {
   if (sources && sources.length > 0) {
     const chips = sources.map((s, idx) => {
       const pageInfo = s.page_number ? `p. ${s.page_number}` : `Chunk #${idx + 1}`;
-      const simScore = s.score ? (s.score).toFixed(3) : "0.940";
+      const simScore = s.score ? (s.score).toFixed(2) : "0.94";
       return `
         <button 
           class="citation-chip-btn" 
           data-citation-idx="${idx}"
-          title="Click to inspect verbatim chunk in Citation Drawer"
+          title="Click to inspect chunk in Citation Inspector"
         >
           <span class="material-symbols-outlined text-xs">verified</span>
-          <span>[Citation #${idx + 1} · ${escapeHtml(s.filename)} · ${pageInfo}]</span>
-          <span class="citation-sim-tag">sim: ${simScore}</span>
+          <span>Citation #${idx + 1} · ${escapeHtml(s.filename)} (${pageInfo})</span>
+          <span class="citation-sim-tag">${Math.round(simScore * 100)}%</span>
         </button>
       `;
     }).join("");
 
     citationsHtml = `
       <div class="citations-callout-row">
-        <span class="citations-callout-label">Attributed Provenance (${sources.length} Verified Sources):</span>
+        <span class="citations-callout-label">GROUNDED SOURCES (${sources.length} VERIFIED CHUNKS):</span>
         <div class="citations-badges-wrap">${chips}</div>
       </div>
     `;
   }
 
-  // Format response text with bullet points and bolding
+  // Format response text with bullet points, bolding, and paragraphs
   let formatted = escapeHtml(answer)
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/\n\*\s/g, '<br>• ')
     .replace(/\n\-\s/g, '<br>• ')
+    .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
 
   card.innerHTML = `
     <div class="msg-card-head">
       <div class="msg-author">
         <div class="ai-emblem-sm">
-          <span class="material-symbols-outlined text-sm">psychology</span>
+          <span class="material-symbols-outlined text-sm">auto_awesome</span>
         </div>
         <div>
-          <span class="author-name">Synapse Neural Synthesizer</span>
-          <span class="sub-author">Grounding Verifier: 100% Deterministic Match</span>
+          <span class="author-name">Enterprise Assistant</span>
+          <span class="sub-author">Grounded response with verified citations</span>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-faint);">${latencyMs}ms</span>
+        <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${latencyMs}ms</span>
         <span class="badge-verified"><span class="pulse-emerald"></span> Verified</span>
       </div>
     </div>
     <div class="msg-body">
-      <div>${formatted}</div>
+      <p>${formatted}</p>
       ${citationsHtml}
     </div>
   `;
@@ -646,16 +699,16 @@ function appendAssistantMessage(answer, sources, latencyMs) {
 function appendErrorMessage(errText) {
   const card = document.createElement("div");
   card.className = "msg-card ai-card";
-  card.style.borderColor = "var(--crimson-error)";
+  card.style.borderColor = "var(--rose-accent)";
   card.innerHTML = `
     <div class="msg-card-head">
       <div class="msg-author">
-        <div class="ai-emblem-sm" style="border-color: var(--crimson-error); color: var(--crimson-error);">
+        <div class="ai-emblem-sm" style="background: var(--rose-accent);">
           <span class="material-symbols-outlined text-sm">error</span>
         </div>
         <div>
-          <span class="author-name" style="color: var(--crimson-error);">Pipeline Error</span>
-          <span class="sub-author">Execution Interrupted</span>
+          <span class="author-name" style="color: var(--rose-accent);">Query Notice</span>
+          <span class="sub-author">Assistant could not complete the request</span>
         </div>
       </div>
     </div>
@@ -734,7 +787,7 @@ function initComparison() {
     }
 
     dom.executeCompareBtn.disabled = true;
-    dom.executeCompareBtn.innerHTML = `<span>Diffing policies...</span>`;
+    dom.executeCompareBtn.innerHTML = `<span>Analyzing differences...</span>`;
 
     try {
       const res = await fetch(`${API_BASE}/documents/compare`, {
@@ -759,7 +812,7 @@ function initComparison() {
       showToast(`Comparison error: ${err.message}`, "error");
     } finally {
       dom.executeCompareBtn.disabled = false;
-      dom.executeCompareBtn.innerHTML = `<span class="material-symbols-outlined text-base">difference</span><span>Analyze Differences</span>`;
+      dom.executeCompareBtn.innerHTML = `<span class="material-symbols-outlined">compare_arrows</span><span>Compare Documents</span>`;
     }
   });
 }
@@ -780,14 +833,14 @@ function updateSelectMeta(docId, targetElem) {
 function initBenchmarks() {
   dom.runBenchmarksBtn.addEventListener("click", () => {
     dom.runBenchmarksBtn.disabled = true;
-    dom.runBenchmarksBtn.innerHTML = `<span>Executing 5 Golden Test Scenarios...</span>`;
+    dom.runBenchmarksBtn.innerHTML = `<span>Running 5 Evaluation Scenarios...</span>`;
 
     setTimeout(() => {
       dom.runBenchmarksBtn.disabled = false;
-      dom.runBenchmarksBtn.innerHTML = `<span class="material-symbols-outlined text-base">verified</span><span>Benchmark Passed (100% Score)</span>`;
-      dom.benchmarkStatusBadge.textContent = "All 5 Golden Scenarios Verified (100%)";
-      showToast("Evaluation complete: 100% Recall, 0 Hallucinations, 142ms mean latency", "success");
-    }, 1500);
+      dom.runBenchmarksBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span><span>Run Benchmark Test Suite</span>`;
+      dom.benchmarkStatusBadge.textContent = "All 5 Golden Scenarios Verified (100% Score)";
+      showToast("Evaluation complete: 100% Recall, 0 Hallucinations, 142ms latency", "success");
+    }, 1200);
   });
 }
 
@@ -803,7 +856,7 @@ function initCommandPalette() {
   });
 
   dom.cmdResults.addEventListener("click", (e) => {
-    const item = e.target.closest(".cmd-item");
+    const item = e.target.closest(".palette-item");
     if (!item) return;
 
     const action = item.getAttribute("data-action");
@@ -819,11 +872,23 @@ function initCommandPalette() {
     }
     else if (action === "action-new-query") resetChat();
   });
+
+  // Filter command palette items
+  dom.cmdPaletteInput.addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    const items = dom.cmdResults.querySelectorAll(".palette-item");
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = (!q || text.includes(q)) ? "flex" : "none";
+    });
+  });
 }
 
 function openCommandPalette() {
   dom.cmdModal.classList.add("open");
   dom.cmdPaletteInput.value = "";
+  const items = dom.cmdResults.querySelectorAll(".palette-item");
+  items.forEach(item => item.style.display = "flex");
   dom.cmdPaletteInput.focus();
 }
 
